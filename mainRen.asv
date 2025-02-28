@@ -7,13 +7,13 @@ t=0.01;
 E=4.5*10^9;
 nu=0.32; 
 V_box=12*L*2*L*t;
-meshfac=2^3;
+meshfac=2^0;
 plotpar=[1, 7, 0];
 magnfac=1e0;
 fac=3;
 p=2;
 last=-200;
-maxit=30;
+maxit=1;
 
 
 
@@ -124,7 +124,7 @@ for it=1:maxit
     for el=1:nelm
         ui=u(edof(el,2:end));
         t1=(3/(2*nelm)) * (sum(xval)/nelm)^0.5 * F'*u;
-%         t2= (sum(xval)/nelm)^1.5*ui'*Ki{el}*ui;
+%         t2= 2*(1-delta_0)*xval(el)* (sum(xval)/nelm)^1.5*ui'*Ki{el}*ui;
         t2= p*(1-delta_0)*xval(el)^(p-1)* (sum(xval)/nelm)^1.5*ui'*Ki{el}*ui;
         dg0(el)=t1-t2;
     %     dg0(el)=-ai'*Ki{el}*ai;
@@ -140,23 +140,21 @@ for it=1:maxit
     xold1=xval;
     z=xmma;
 
-    for el=1:nelm
+    for el=1:2
         grannar=[];
         noder=enod(el,2:5);
         for i=1:4
             [granne,~]=find(enod(:,2:5)==noder(i));
             grannar=unique([grannar;granne]);
         end
-%         grannar(grannar==el)=[];
+        grannar(grannar==el)=[];
         w1=0;
-        w2=0;
+        w2=
         for i=1:length(grannar)
-            w=max(0,1-abs(z(el)-z(grannar(i))));
-            w1=w1+w*z(grannar(i));
-            w2=w2+w;
+            w1=w+max(0,1-abs(z(el)-z(grannar(i))))*z(grannar(i));
         end
-        xval(el)=w1/w2;
-%         z(el)/xval(el);
+        
+
         
     end
 
