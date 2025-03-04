@@ -7,7 +7,7 @@ t=0.01;
 E=4.5*10^9;
 nu=0.32; 
 V_box=12*L*2*L*t;
-meshfac=2^3;
+meshfac=2^4;
 plotpar=[1, 7, 0];
 magnfac=1e0;
 fac=3;
@@ -18,7 +18,7 @@ maxit=30;
 
 
 
-[coord, dof, enod, edof, Ex, Ey, bc] = designDomain(6*L, 2*L, L/meshfac);
+[coord, dof, enod, edof, Ex, Ey, ~] = designDomain(6*L, 2*L, L/meshfac);
 
 % patch(Ex', Ey', 1)
 % eldraw2(Ex,Ey,plotpar)
@@ -27,7 +27,8 @@ nnod=length(coord);
 ndof=nnod*2;
 
 ep=[1 t 2];
-D=E/(1-nu^2).*[1 nu 0; nu 1 0; 0 0 (1-nu)/2];
+% D=E/(1-nu^2).*[1 nu 0; nu 1 0; 0 0 (1-nu)/2];
+D=hooke(1,E,nu);
 
 
 % hitta noder med bc
@@ -58,6 +59,13 @@ for n=1:1
     F(last_noder)=last/(3*n);
 end
 
+for n=1:1
+    y_last=last_noder+1;
+    F((y_last<last_nod)'*y_last)=n*last/10;
+    F((y_last>last_nod)'*y_last)=-n*last/10;
+end
+
+
 
 % skapa K
 
@@ -76,6 +84,8 @@ end
 A=ones(nelm,1);
 
 
+
+
 % SIMP
 
 delta_0=1e-9; 
@@ -88,6 +98,8 @@ end
 Ks=sparse(K);
 u=solveq(Ks,F,bc);
 g0(u,F,z);
+
+
 
 % fel derivata med MMA med svanberg
 
@@ -177,6 +189,7 @@ for it=1:maxit
 
 end
 
+figure()
 ed=extract(edof,u);
 myeldisp2(Ex,Ey,ed,plotpar,magnfac,xval,fac);
 

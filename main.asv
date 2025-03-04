@@ -415,7 +415,7 @@ g0(u,F,z);
 
 for el=1:1
     [es,~,eci]=plani4s(Ex(el,:),Ey(el,:),ep,D,ed(el,:));
-    vM=1
+    vM=
 end
 
 %%
