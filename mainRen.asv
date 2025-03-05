@@ -7,13 +7,13 @@ t=0.01;
 E=4.5*10^9;
 nu=0.32; 
 V_box=12*L*2*L*t;
-meshfac=2^2;
+meshfac=2^4;
 plotpar=[1, 7, 0];
 magnfac=1e0;
-fac=3;
-p=2;
+fac=5;
+p=3;
 last=-200;
-maxit=10;
+maxit=50;
 
 
 
@@ -61,11 +61,11 @@ end
 
 for n=1:1
     y_last=last_noder+1;
-    F((y_last<last_nod)=n*last/100
-    F(y_last>last_nod)=-n*last/100;
+    F((y_last<last_nod)'*y_last)=n*last/10;
+    F((y_last>last_nod)'*y_last)=-n*last/10;
 end
 
-%%
+
 
 % skapa K
 
@@ -129,6 +129,10 @@ func_vals=zeros(1,3);
 func_vals(1)=g0(u,F,xval);
 
 dg0_mat=zeros(nelm,1);
+
+ed_mat=cell(5,1);
+fig_nr=0;
+
 for it=1:maxit
     outeriter=outeriter+1;
     dg0=zeros(nelm,1);
@@ -181,21 +185,27 @@ for it=1:maxit
 
     Ks=sparse(K);
     u=solveq(Ks,F,bc);
-    x_mat(:,it+1)=xval;
     func_vals(it+1)=g0(u,F,xval);
+    if mod(outeriter,10)==0
+        fig_nr=fig_nr+1;
+        ed=extract(edof,u);
+        ed_mat{fig_nr}=ed;
+        x_mat(:,fig_nr)=xval;
+    end
 %     figure()
 %     ed=extract(edof,u);
 %     myeldisp2(Ex,Ey,ed,plotpar,magnfac,xval,fac);
 
 end
 
-figure()
-ed=extract(edof,u);
-myeldisp2(Ex,Ey,ed,plotpar,magnfac,xval,fac);
 
 
+for fig=1:fig_nr
+    figure()
+%         myeldisp2(Ex,Ey,ed_mat{fig},plotpar,magnfac,x_mat(:,fig),fac);
+    patch(Ex', Ey', x_mat(:,fig));
 
-
+end
 
 
 
