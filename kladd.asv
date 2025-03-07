@@ -406,7 +406,9 @@ for fig=1:fig_nr
 
 end
 
-%% försöka spegla a) och b)
+%%
+
+%% med rätt filtrering, inte speglad
 
 
 clc
@@ -416,11 +418,11 @@ t=0.01;
 E=4.5*10^9;
 nu=0.32; 
 V_box=12*L*2*L*t;
-meshfac=2^3;
+meshfac=2^4;
 p=3;
-last=-200;
-maxit=60;
-r=0.3*L;
+last=-800;
+maxit=30;
+r=0.1*L;
 
 
 
@@ -437,20 +439,20 @@ D=hooke(1,E,nu);
 
 % hitta noder med bc
 
-last_nod=find(ismember(coord, [0.06, 0.02], 'rows'))*2;
+last_nod=find(ismember(coord, [0.03, 0.02], 'rows'))*2;
 
 
 if meshfac>1
-    bc_node=find(ismember(coord, [0.005, 0], 'rows'))*2;
+    bc_nodes=find(ismember(coord, [0.005, 0;0.055, 0], 'rows'))*2;
 else 
-    bc_node=find(ismember(coord, [0.01, 0], 'rows'))*2;
+    bc_nodes=find(ismember(coord, [0.01, 0;0.05, 0], 'rows'))*2;
 end
 
+bc_node=bc_nodes;
 
-bc_nodes=find(ismember(coord(:,1), 0.06, 'rows'))*2-1;
-
-bc_nodes=[bc_node;bc_nodes];
-
+for n=1:1
+%     bc_nodes=[bc_nodes-2*n; bc_nodes; bc_nodes+2*n];
+end
 bc=zeros(length(bc_nodes),2);
 bc(:,1)=bc_nodes;
 
@@ -458,7 +460,16 @@ bc(:,1)=bc_nodes;
 F=zeros(ndof,1);
 F(last_nod)=last;
 
+for n=1:1
+    last_noder=[last_nod-2*n; last_nod+2*n];
+    F(last_noder)=last/(3*n);
+end
 
+for n=1:1
+    x_last=last_noder-1;
+    F((x_last<last_nod)'*x_last)=n*last/10;
+    F((x_last>last_nod)'*x_last)=-n*last/10;
+end
 
 
 
@@ -494,7 +505,7 @@ Ks=sparse(K);
 u=solveq(Ks,F,bc);
 g0(u,F,z);
 
-%
+
 % Tyra=matfile('Mmesh5.mat');
 
 % Avståndsmatris.. (borde göra med Adjecency matris men nu har jag sparat för 2^5 iaf..)
@@ -565,7 +576,7 @@ for it=1:maxit
     
     dg0_mat(:,it)=dg0;
 
-    g0val=g0(u,F,z_t);
+    g0val=g0(u,F,z_t)*1000;
     [xmma,ymma,zmma,lam,xsi,eta,mu,zet,s,low,upp]= ...
         mmasub(m,n,outeriter,z,xmin,xmax,xold1,xold2, ...
         g0val,dg0,g1val,dg1,low,upp,a0,a,c,d);
@@ -598,13 +609,10 @@ end
 
 
 for fig=1:fig_nr
+    figure()
     axis equal
     patch(Ex', Ey', x_mat(:,fig));
-    hold on
-    patch(-Ex' + 12*L, Ey', x_mat(:,fig));
-    hold off
-    drawnow
-    pause(0.5)
+
 end
 
 

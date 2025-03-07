@@ -1,14 +1,3 @@
-clc;clear;
-
-
-% steg 1, hitta det mi ska minimera för grundformen
-% - hitta compliance för grundfigur. Börja med ett F på något:))
-% - vi ska minimera F'a*(V/Vbox)^(3/2)
-% plan: tjocklek för alla emelent A(/x?). fan fattar inte hur man ska se
-% elementen.. Fattar om man ser det om faktopr av densitet typ? Fattar om
-% man ska optimera thickness...
-
-
 %% 
 
 clc
@@ -18,12 +7,11 @@ t=0.01;
 E=4.5*10^9;
 nu=0.32; 
 V_box=12*L*2*L*t;
-meshfac=2^3;
+meshfac=2^0;
 p=3;
 last=-800;
-maxit=30;
+maxit=1;
 r=0.1*L;
-
 
 
 
@@ -92,7 +80,7 @@ A=ones(nelm,1);
 
 
 
-% SIMP
+%% SIMP
 
 delta_0=1e-9; 
 z=A;
@@ -103,12 +91,64 @@ for el=1:nelm
 end
 Ks=sparse(K);
 u=solveq(Ks,F,bc);
-g0(u,F,z);
 
 
-% Tyra=matfile('Mmesh5.mat');
 
-% Avståndsmatris.. (borde göra med Adjecency matris men nu har jag sparat för 2^5 iaf..)
+% g1=
+g0save1=F'*u;
+g1save1
+
+
+
+
+%%
+vM=ones(nelm,1);
+dvM=ones(nelm,1);
+
+P=[2 -1 0; -1 2 0; 0 0 6];
+
+
+for el=1:nelm
+    [es,~,eci]=plani4s(Ex(el,:),Ey(el,:),[1,t,1],D,ed(el,:));
+    vm=sqrt(1/2*es*P*es');
+    vM(el)=vm;
+    dsig=es/z(el);
+    dvM(el)=(1/vm)*P*es';
+end
+
+
+vM=(z.^0.5).*vM;
+p_sig=8;
+vMM=(sum(vM.^p_sig))^(1/p_sig);
+
+
+
+
+%% Nummerisk derivata?? börja med gd0.
+h=1e-3;
+dg0n=zeros(nelm,1);
+
+
+for el=1:nelm
+    h_vec=zeros(nelm,1);
+    h_vec(el)=h;
+    zn=z.*(1+h_vec);
+    indx=edof(el,2:end);
+    Kn=K;
+    Kn(indx,indx)=K(indx,indx)-(delta_0+(1-delta_0)*z(el)^p)*Ki{el}+(delta_0+(1-delta_0)*zn(el)^p)*Ki{el};
+    Kns=sparse(Kn);
+    un=solveq(Kns,F,bc);
+    dg0n(el)=(F'*un-F'*u)/h;
+
+
+
+
+
+
+end
+
+
+%% Avståndsmatris.. (borde göra med Adjecency matris men nu har jag sparat för 2^5 iaf..)
 
 M=zeros(nelm,nelm);
 
@@ -149,8 +189,6 @@ c       = 1000*ones(m, 1);
 d       = ones(m, 1);
 outeriter = 0;
 kkttol  = 1e-13;
-dg1=0;
-g1val=-1;
 
 x_mat=zeros(nelm,3);
 x_mat(:,1)=z_t;
@@ -214,8 +252,3 @@ for fig=1:fig_nr
     patch(Ex', Ey', x_mat(:,fig));
 
 end
-
-
-
-
-
